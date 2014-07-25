@@ -16,7 +16,7 @@ import logging
 from sklearn.externals import joblib
 from sklearn.metrics import roc_auc_score
 
-dataFolder = "/home/vleksin/data/kaggle_afraud_dataset"
+dataFolder = "/Users/zhiminp/Documents/Kaggle/avito/data/"
 
 stopwords= frozenset(word.decode('utf-8') for word in nltk.corpus.stopwords.words("russian") if word!="не")    
 stemmer = SnowballStemmer('russian')
@@ -54,7 +54,7 @@ def getItems(fileName, itemsLimit=None):
         itemReader=csv.DictReader(items_fd, delimiter='\t', quotechar = '"')
         itemNum = 0
         for i, item in enumerate(itemReader):
-            item = {featureName:featureValue.decode('utf-8') for featureName,featureValue in item.iteritems()}
+            item = {featureName:featureValue.decode('utf-8') for featureName,featureValue in item.iteritems() if featureValue is not None}
             if not itemsLimit or i in sampleIndexes:
                 itemNum += 1
                 yield itemNum, item
@@ -125,16 +125,17 @@ def processData(fileName, featureIndexes={}, itemsLimit=None):
 def main():
     """ Generates features and fits classifier. """
     
-#     featureIndexes = processData(os.path.join(dataFolder,"avito_train.tsv"), itemsLimit=300000)
-#     trainFeatures,trainTargets, trainItemIds=processData(os.path.join(dataFolder,"avito_train.tsv"), featureIndexes, itemsLimit=300000)
-#     testFeatures, testItemIds=processData(os.path.join(dataFolder,"avito_test.tsv"), featureIndexes)
-#    joblib.dump((trainFeatures, trainTargets, trainItemIds, testFeatures, testItemIds), os.path.join(dataFolder,"train_data.pkl"))
+    featureIndexes = processData(os.path.join(dataFolder,"avito_train.tsv"), itemsLimit=300000)
+    trainFeatures,trainTargets, trainItemIds=processData(os.path.join(dataFolder,"avito_train.tsv"), featureIndexes, itemsLimit=300000)
+    testFeatures, testItemIds=processData(os.path.join(dataFolder,"avito_test.tsv"), featureIndexes)
+    joblib.dump((trainFeatures, trainTargets, trainItemIds, testFeatures, testItemIds), os.path.join(dataFolder,"train_data.pkl"))
     trainFeatures, trainTargets, trainItemIds, testFeatures, testItemIds = joblib.load(os.path.join(dataFolder,"train_data.pkl"))
     logging.info("Feature preparation done, fitting model...")
     clf = SGDClassifier(    loss="log", 
                             penalty="l2", 
-                            alpha=1e-4, 
-                            class_weight="auto")
+                            alpha=1e-5, 
+                            class_weight="auto",
+                            n_iter = 100)
     clf.fit(trainFeatures,trainTargets)
 
     logging.info("Predicting...")

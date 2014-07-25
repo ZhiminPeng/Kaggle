@@ -29,4 +29,4 @@ def APatK ( predictedFileName, relevantIDsFileName, K ):
 
   return sum( listOfPrecisions ) / K 
 
-print APatK( "predictions.csv", "solution.csv", 32500 )
+# print APatK( "predictions.csv", "solution.csv", 32500 )
